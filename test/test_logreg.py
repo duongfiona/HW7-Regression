@@ -22,7 +22,7 @@ def test_prediction_simple():
 	X = np.array([[0], [10]])
 	y_true = np.array([0, 1])
 
-	simple_model = LogisticRegressor(num_feats=1)
+	simple_model = logreg.LogisticRegressor(num_feats=1)
 
 	# pad X with 1s for bias term and generate y_pred
 	X_padded = np.hstack([X, np.ones((X.shape[0], 1))])
@@ -88,7 +88,7 @@ def test_loss_function_simple():
 	but the very incorrect solution should at least have a greater loss value comparatively (in
 	order to encourage greater changes in the model weights). 
 	"""
-	simple_model = LogisticRegressor(num_feats=1)
+	simple_model = logreg.LogisticRegressor(num_feats=1)
 
 	# setting up a few simple test cases
 	y_true = np.array([0, 1, 0, 1 ,0])
@@ -165,7 +165,7 @@ def test_gradient_simple():
 	y_true = np.array([0, 1])
 
 	# setting model weights to 0 to test
-	simple_model = LogisticRegressor(num_feats=num_feats)
+	simple_model = logreg.LogisticRegressor(num_feats=num_feats)
 	simple_model.W = np.zeros(num_feats + 1).flatten()
 
 	grad = simple_model.calculate_gradient(y_true, X_padded)
