@@ -119,7 +119,7 @@ class LogisticRegressor(BaseRegressor):
     
     def make_prediction(self, X) -> np.array:
         """
-        TODO: Implement logistic function to get estimates (y_pred) for input X values. The logistic
+        Logistic function to get estimates (y_pred) for input X values. The logistic
         function is a transformation of the linear model into an "S-shaped" curve that can be used
         for binary classification.
 
@@ -129,11 +129,15 @@ class LogisticRegressor(BaseRegressor):
         Returns: 
             The predicted labels (y_pred) for given X.
         """
-        pass
+        # formula for sigmoid function is y = 1 / (1 + e^-z), where z = X*W
+        z = np.dot(X, self.W)
+        y_pred = 1 / (1 + np.exp(-z))
+        
+        return y_pred # final size should be a vector of n samples
     
     def loss_function(self, y_true, y_pred) -> float:
         """
-        TODO: Implement binary cross entropy loss, which assumes that the true labels are either
+        Function to calculate binary cross entropy loss, which assumes that the true labels are either
         0 or 1. (This can be extended to more than two classes, but here we have just two.)
 
         Arguments:
@@ -143,11 +147,23 @@ class LogisticRegressor(BaseRegressor):
         Returns: 
             The mean loss (a single number).
         """
-        pass
+        # adding/sub-ing epsilon if some predictions somehow end up exactly 0/1 to avoid log(0) errors
+        epsilon = 1e-20
+        y_pred = np.clip(y_pred, epsilon, 1-epsilon)
+
+        # BCE loss for one sample = - [y_true * log(y_pred) + (1-y_true) * log(1-y_pred)]
+        # essentially, the loss penalty per sample is the log of the prediction for the true class
+            # if y_pred is suggesting the opp class, there will be a bigger loss penalty
+
+        all_losses = -(y_true * np.log(y_pred) + (1-y_true) * np.log(1-y_pred)) # vectorized calculation
+
+        # returning mean loss across all samples
+        mean_loss = np.mean(all_losses)
+        return mean_loss
         
     def calculate_gradient(self, y_true, X) -> np.ndarray:
         """
-        TODO: Calculate the gradient of the loss function with respect to the given data. This
+        Calculate the gradient of the loss function with respect to the given data. This
         will be used to update the weights during training.
 
         Arguments:
@@ -157,4 +173,21 @@ class LogisticRegressor(BaseRegressor):
         Returns: 
             Vector of gradients.
         """
-        pass
+        # some math for where grad eqn came from, done cleaner on paper
+
+        # y_pred = (1 + e^-X*z)^-1
+        # dy_pred/dz = -(1 + e^-z)^-2 * -e^-z = ... =  y_pred * (1-y_pred)
+        # z ~ weights
+
+        # BCE = - [y_true * log(y_pred) + (1-y_true) * log(1-y_pred)]
+        # d(BCE)/dy_pred = - y_true/y_pred + (1-y_true)/(1-y_pred)
+
+        # d(BCE)/dz = d(BCE)/dy_pred * dy_pred/dz
+        # = [-y_true/y_pred + (1-y_true)/(1-y_pred)] * [y_pred * (1-y_pred)] = ... = y_pred - y_true
+
+        # grad = d(BCE)/dw = dz/dw * d(BCE)/dz = x * (y_pred - y_true) !!!
+
+        error = self.make_prediction(X) - y_true
+        grad = np.dot(X.T, error) 
+
+        return grad # final size should be a vector of length number of weights
